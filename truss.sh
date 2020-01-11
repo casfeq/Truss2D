@@ -21,4 +21,4 @@ echo ""
 echo "-- Plotting results"
 # python3 -W ignore ./postpro/sealedColumnPlotSolution.py ${medium}
 echo ""
-rm -rf export/*
+# rm -rf export/*

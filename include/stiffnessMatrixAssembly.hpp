@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class assembly
+class stiffnessMatrixAssembly
 {
 public:
 	// Class variables
@@ -28,28 +28,30 @@ public:
 	void assemblyStiffnessMatrix();
 
 	// Constructor
-	assembly(string,string,string);
+	stiffnessMatrixAssembly(string,string,string);
 
 	// Destructor
-	~assembly();
+	~stiffnessMatrixAssembly();
 };
 
-assembly::assembly(string connecFile, string coordFile, string propFile)
+stiffnessMatrixAssembly::stiffnessMatrixAssembly(string connecFile, string coordFile,
+	string propFile)
 {
 	importData(connecFile,coordFile,propFile);
 	resizeMatrices();
 	assemblyStiffnessMatrix();
 }
 
-assembly::~assembly(){}
+stiffnessMatrixAssembly::~stiffnessMatrixAssembly(){}
 
-void assembly::importData(string connecFile, string coordFile, string propFile)
+void stiffnessMatrixAssembly::importData(string connecFile, string coordFile, string propFile)
 {
 	ifstream inFile;
 	int I, J;
 	vector<int> connecPair;
 	double x, y;
 	vector<double> coordPair;
+	
 	inFile.open("../input/"+connecFile+".txt");
 	if(!inFile)
 	{
@@ -93,7 +95,7 @@ void assembly::importData(string connecFile, string coordFile, string propFile)
 	return;
 }
 
-void assembly::resizeMatrices()
+void stiffnessMatrixAssembly::resizeMatrices()
 {
 	elementStiffnessMatrix.resize(4);
 	for(int i=0; i<4; i++) elementStiffnessMatrix[i].resize(4);
@@ -103,7 +105,7 @@ void assembly::resizeMatrices()
 	return;	
 }
 
-double assembly::angleCalc(int element)
+double stiffnessMatrixAssembly::angleCalc(int element)
 {
 	double angle;
 	int I=connectivity[element][0]-1;
@@ -118,7 +120,7 @@ double assembly::angleCalc(int element)
 	return angle;
 }
 
-double assembly::sizeCalc(int element)
+double stiffnessMatrixAssembly::sizeCalc(int element)
 {
 	double size;
 	int I=connectivity[element][0]-1;
@@ -133,7 +135,7 @@ double assembly::sizeCalc(int element)
 	return size;
 }
 
-void assembly::assemblyElementStiffnessMatrix(int element)
+void stiffnessMatrixAssembly::assemblyElementStiffnessMatrix(int element)
 {
 	double elementStiffness=youngModulus*area/sizeCalc(element);
 	double angle=angleCalc(element);
@@ -158,7 +160,7 @@ void assembly::assemblyElementStiffnessMatrix(int element)
 	return;
 }
 
-void assembly::stiffnessMatrixOverlap(int element)
+void stiffnessMatrixAssembly::stiffnessMatrixOverlap(int element)
 {
 	int I=2*connectivity[element][0]-2;
 	int J=2*connectivity[element][1]-2;
@@ -175,7 +177,7 @@ void assembly::stiffnessMatrixOverlap(int element)
 	return;
 }
 
-void assembly::assemblyStiffnessMatrix()
+void stiffnessMatrixAssembly::assemblyStiffnessMatrix()
 {
 	for(int i=0; i<connectivity.size(); i++)
 	{

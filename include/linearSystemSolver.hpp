@@ -14,19 +14,8 @@ public:
 	vector<double> sparseCoefficientsColumn;
 	vector<double> sparseCoefficientsValue;
 	vector<double> independentTermsArray;
-	vector<vector<double>> uField;
-	vector<vector<double>> vField;
-	vector<vector<double>> pField;
-	int Nu;
-	int Nv;
-	int NP;
-	int Nt;
-	vector<vector<int>> uDisplacementFVIndex;
-	vector<vector<int>> vDisplacementFVIndex;
-	vector<vector<int>> pressureFVIndex;
-	vector<vector<int>> uDisplacementFVCoordinates;
-	vector<vector<int>> vDisplacementFVCoordinates;
-	vector<vector<int>> pressureFVCoordinates;
+	vector<double> solution;
+	int size;
 	PetscErrorCode ierr;
 	Mat coefficientsMatrixPETSc;
 	Vec independentTermsArrayPETSc;
@@ -35,95 +24,47 @@ public:
 	MatFactorInfo info;
 
 	// Class functions
-	int getUDisplacementFVPosition(int,int);
-	int getVDisplacementFVPosition(int,int);
-	int getPressureFVPosition(int,int);
 	int coefficientsMatrixLUFactorization();
 	int createPETScArrays();
 	int zeroPETScArrays();
 	int setRHSValue(vector<double>);
 	int solveLinearSystem();
-	int setFieldValue(int);
-	double mandelErrorCalculation(string,double,double,int,double,double,double,double);
-	double mandelStaggeredErrorCalculation(double,double,int,double,double,double,double);
-	double mandelCollocatedErrorCalculation(double,double,int,double,double,double,double);
+	int setFieldValue();
 
 	// Constructor
-	linearSystemSolver(vector<vector<double>>,vector<double>,vector<double>,vector<double>,
-		vector<vector<double>>,vector<vector<double>>,vector<vector<double>>,int,int,int,int,
-		vector<vector<int>>,vector<vector<int>>,vector<vector<int>>,vector<vector<int>>,
-		vector<vector<int>>,vector<vector<int>>);
+	linearSystemSolver(vector<vector<double>>,int);
 
 	// Destructor
 	~linearSystemSolver();
 };
 
-linearSystemSolver::linearSystemSolver(vector<vector<double>> myCoefficientsMatrix, 
-	vector<double> mySparseCoefficientsRow, vector<double> mySparseCoefficientsColumn, 
-	vector<double> mySparseCoefficientsValue, vector<vector<double>> uDisplacementField,
-	vector<vector<double>> vDisplacementField, vector<vector<double>> pressureField, int myNu,
-	int myNv, int myNP, int myNt, vector<vector<int>> idU, vector<vector<int>> idV,
-	vector<vector<int>> idP, vector<vector<int>> cooU, vector<vector<int>> cooV,
-	vector<vector<int>> cooP)
+linearSystemSolver::linearSystemSolver(vector<vector<double>> myCoefficientsMatrix, int mySize)
 {
 	coefficientsMatrix=myCoefficientsMatrix;
-	sparseCoefficientsRow=mySparseCoefficientsRow;
-	sparseCoefficientsColumn=mySparseCoefficientsColumn;
-	sparseCoefficientsValue=mySparseCoefficientsValue;
-	uField=uDisplacementField;
-	vField=vDisplacementField;
-	pField=pressureField;
-	Nu=myNu;
-	Nv=myNv;
-	NP=myNP;
-	Nt=myNt;
-	uDisplacementFVIndex=idU;
-	vDisplacementFVIndex=idV;
-	pressureFVIndex=idP;
-	uDisplacementFVCoordinates=cooU;
-	vDisplacementFVCoordinates=cooV;
-	pressureFVCoordinates=cooP;
+	size=mySize;
+
+	for(int i=0; i<size; i++)
+	{
+		for(int j=0; j<size; j++)
+		{
+			double value=coefficientsMatrix[i][j];
+			if(value!=0)
+			{
+				sparseCoefficientsRow.push_back(i);
+				sparseCoefficientsColumn.push_back(j);
+				sparseCoefficientsValue.push_back(value);
+			}
+		}
+	}
 
 	return;
 }
 
-linearSystemSolver::~linearSystemSolver()
-{
-	MatDestroy(&coefficientsMatrixPETSc);
-	VecDestroy(&independentTermsArrayPETSc);
-	VecDestroy(&linearSystemSolutionPETSc);
-}
-
-int linearSystemSolver::getUDisplacementFVPosition(int x, int y)
-{
-	int uDisplacementFVPosition;
-
-	uDisplacementFVPosition=uDisplacementFVIndex[x][y]-1;
-
-	return uDisplacementFVPosition;
-}
-
-int linearSystemSolver::getVDisplacementFVPosition(int x, int y)
-{
-	int vDisplacementFVPosition;
-
-	vDisplacementFVPosition=vDisplacementFVIndex[x][y]+Nu-1;
-
-	return vDisplacementFVPosition;
-}
-
-int linearSystemSolver::getPressureFVPosition(int x, int y)
-{
-	int pressureFVPosition;
-
-	pressureFVPosition=pressureFVIndex[x][y]+Nu+Nv-1;
-
-	return pressureFVPosition;
-}
+linearSystemSolver::~linearSystemSolver(){}
 
 int linearSystemSolver::coefficientsMatrixLUFactorization()
 {
-	PetscInt n=coefficientsMatrix.size();
+	PetscInt n=size;
 	PetscInt nonZeroEntries=sparseCoefficientsValue.size();
 	PetscInt rowNo, colNo;
 	PetscScalar value;
@@ -161,7 +102,7 @@ int linearSystemSolver::coefficientsMatrixLUFactorization()
 
 int linearSystemSolver::createPETScArrays()
 {
-	PetscInt n=coefficientsMatrix.size();
+	PetscInt n=size;
 
 	ierr=VecCreateSeq(PETSC_COMM_SELF,n,&independentTermsArrayPETSc);CHKERRQ(ierr);
 	ierr=VecSet(independentTermsArrayPETSc,0.0);CHKERRQ(ierr);
@@ -186,7 +127,7 @@ int linearSystemSolver::zeroPETScArrays()
 
 int linearSystemSolver::setRHSValue(vector<double> independentTermsArray)
 {
-	PetscInt n=independentTermsArray.size();
+	PetscInt n=size;
 	PetscScalar value;
 
 	for(int i=0; i<n; i++)
@@ -211,135 +152,16 @@ int linearSystemSolver::solveLinearSystem()
 	return ierr;
 }
 
-int linearSystemSolver::setFieldValue(int timeStep)
+int linearSystemSolver::setFieldValue()
 {
 	PetscScalar value;
 
-	for(int i=0; i<Nu; i++)
+	solution.clear();
+	for(int i=0; i<size; i++)
 	{
 		ierr=VecGetValues(linearSystemSolutionPETSc,1,&i,&value);CHKERRQ(ierr);
-		uField[i][timeStep]=value;
-	}
-
-	for(int i=Nu; i<Nu+Nv; i++)
-	{
-		ierr=VecGetValues(linearSystemSolutionPETSc,1,&i,&value);CHKERRQ(ierr);
-		vField[i-Nu][timeStep]=value;
-	}
-
-	for(int i=Nu+Nv; i<Nu+Nv+NP; i++)
-	{
-		ierr=VecGetValues(linearSystemSolutionPETSc,1,&i,&value);CHKERRQ(ierr);
-		pField[i-Nu-Nv][timeStep]=value;
+		solution.push_back(value);
 	}
 
 	return ierr;
-}
-
-double linearSystemSolver::mandelErrorCalculation(string gridType, double dx, double dy,
-	int timeStep, double M, double lambda, double alpha, double F)
-{
-	double error;
-
-	if(gridType=="staggered") error=mandelStaggeredErrorCalculation(dx,dy,timeStep,M,lambda,alpha,
-		F);
-	else if(gridType=="collocated") error=mandelCollocatedErrorCalculation(dx,dy,timeStep,M,lambda,
-		alpha,F);
-
-	return error;
-}
-
-double linearSystemSolver::mandelStaggeredErrorCalculation(double dx, double dy, int timeStep,
-	double M, double lambda, double alpha, double F)
-{
-	int i, j;
-	int u_P, u_E, v_P, v_S, P_P;
-	double currStrain, currPressure;
-	int Nx=vDisplacementFVIndex[0].size();
-	double stressTrial=0;
-
-	for(int FVCounter=0; FVCounter<Nx; FVCounter++)
-	{
-		i=vDisplacementFVCoordinates[FVCounter][0]-1;
-		j=vDisplacementFVCoordinates[FVCounter][1]-1;
-
-		u_P=getUDisplacementFVPosition(i,j);
-		u_E=getUDisplacementFVPosition(i,j+1);
-		v_P=getVDisplacementFVPosition(i,j)-Nu;
-		v_S=getVDisplacementFVPosition(i+1,j)-Nu;
-		P_P=getPressureFVPosition(i,j)-(Nu+Nv);
-
-		currStrain=(uField[u_E][timeStep]-uField[u_P][timeStep])/dx+(vField[v_P][timeStep]-
-			vField[v_S][timeStep])/dy;
-		currPressure=pField[P_P][timeStep];
-
-		stressTrial=stressTrial+(M+lambda)*currStrain-2*alpha*currPressure;
-	}
-
-	double error=stressTrial*dx-F;
-
-	return error;
-}
-
-double linearSystemSolver::mandelCollocatedErrorCalculation(double dx, double dy, int timeStep,
-	double M, double lambda, double alpha, double F)
-{
-	int i, j;
-	int u_P, u_E, u_W, v_P, v_S, P_P;
-	double currStrain, currPressure;
-	int Nx=vDisplacementFVIndex[0].size();
-	double stressTrial=0;
-
-	for(int FVCounter=0; FVCounter<Nx; FVCounter++)
-	{
-		i=vDisplacementFVCoordinates[FVCounter][0]-1;
-		j=vDisplacementFVCoordinates[FVCounter][1]-1;
-
-		if(i==0) // Western border
-		{
-			u_P=getUDisplacementFVPosition(i,j);
-			u_E=getUDisplacementFVPosition(i,j+1);
-			v_P=getVDisplacementFVPosition(i,j)-Nu;
-			v_S=getVDisplacementFVPosition(i+1,j)-Nu;
-			P_P=getPressureFVPosition(i,j)-(Nu+Nv);
-
-			currStrain=(uField[u_E][timeStep]-uField[u_P][timeStep])/dx+(vField[v_P][timeStep]-
-				vField[v_S][timeStep])/dy;
-			currPressure=pField[P_P][timeStep];
-
-			stressTrial=stressTrial+(M+lambda)*currStrain/2-alpha*currPressure;
-		}
-		else if(i==Nx-1) // Eastern border
-		{
-			u_P=getUDisplacementFVPosition(i,j);
-			u_W=getUDisplacementFVPosition(i,j-1);
-			v_P=getVDisplacementFVPosition(i,j)-Nu;
-			v_S=getVDisplacementFVPosition(i+1,j)-Nu;
-			P_P=getPressureFVPosition(i,j)-(Nu+Nv);
-
-			currStrain=(uField[u_P][timeStep]-uField[u_W][timeStep])/dx+(vField[v_P][timeStep]-
-				vField[v_S][timeStep])/dy;
-			currPressure=pField[P_P][timeStep];
-
-			stressTrial=stressTrial+(M+lambda)*currStrain/2-alpha*currPressure;
-		}
-		else
-		{
-			u_W=getUDisplacementFVPosition(i,j-1);
-			u_E=getUDisplacementFVPosition(i,j+1);
-			v_P=getVDisplacementFVPosition(i,j)-Nu;
-			v_S=getVDisplacementFVPosition(i+1,j)-Nu;
-			P_P=getPressureFVPosition(i,j)-(Nu+Nv);
-
-			currStrain=(uField[u_E][timeStep]-uField[u_W][timeStep])/dx+(vField[v_P][timeStep]-
-				vField[v_S][timeStep])/dy;
-			currPressure=pField[P_P][timeStep];
-
-			stressTrial=stressTrial+(M+lambda)*currStrain-2*alpha*currPressure;	
-		}
-	}
-
-	double error=stressTrial*dx-F;
-
-	return error;
 }
