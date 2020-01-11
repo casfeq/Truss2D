@@ -6,11 +6,12 @@ int main(int argc, char** args)
 {	
 	string connecFile="connectivity";
 	string coordFile="coordinates";
+	string propFile="properties";
 
 /*		STIFFNESS MATRIX ASSEMBLY
 	----------------------------------------------------------------*/
 	
-	assembly myAssembly(connecFile,coordFile);
+	assembly myAssembly(connecFile,coordFile,propFile);
 	
 /*		PETSC INITIALIZE
 	----------------------------------------------------------------*/
