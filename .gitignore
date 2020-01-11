@@ -33,6 +33,9 @@
 # Sublime files
 *.sublime-workspace
 
+# Other files
+*.pdf
+
 # Folders
 build/
 debug/
