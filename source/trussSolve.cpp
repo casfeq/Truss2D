@@ -49,6 +49,8 @@ int main(int argc, char** args)
 	ierr=myLinearSystemSolver.solveLinearSystem();CHKERRQ(ierr);
 	ierr=myLinearSystemSolver.setFieldValue();CHKERRQ(ierr);
 	displacement=myLinearSystemSolver.solution;
+
+	cout << "Solved problem";
 	
 	ierr=PetscFinalize();CHKERRQ(ierr);
 
