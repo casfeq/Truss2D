@@ -1,6 +1,8 @@
 clear
 clear
 clear
+mkdir -p export
+mkdir -p plot
 
 export sourceName="trussSolve"
 
@@ -22,4 +24,4 @@ echo ""
 echo "-- Plotting results"
 python3 -W ignore ./postpro/plotSolution.py
 echo ""
-# rm -rf export/*
+rm -rf export/*
