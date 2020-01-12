@@ -40,6 +40,3 @@
 build/
 debug/
 release/
-export/*.txt
-plot/*.png
-plot/*.pdf
