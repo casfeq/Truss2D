@@ -3,6 +3,7 @@ clear
 clear
 mkdir -p export
 mkdir -p plot
+mkdir -p build
 
 export sourceName="trussSolve"
 
