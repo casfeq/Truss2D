@@ -15,21 +15,25 @@ public:
 	vector<double> sparseCoefficientsValue;
 	vector<double> independentTermsArray;
 	vector<double> solution;
+	vector<double> reactions;
 	int size;
 	PetscErrorCode ierr;
 	Mat coefficientsMatrixPETSc;
 	Vec independentTermsArrayPETSc;
 	Vec linearSystemSolutionPETSc;
+	Vec reactionsPETSc;
 	IS perm, iperm;
 	MatFactorInfo info;
 
 	// Class functions
+	void importData(vector<vector<double>>,int);
 	int coefficientsMatrixLUFactorization();
 	int createPETScArrays();
 	int zeroPETScArrays();
 	int setRHSValue(vector<double>);
 	int solveLinearSystem();
 	int setFieldValue();
+	int reactionForcesCalc();
 
 	// Constructor
 	linearSystemSolver(vector<vector<double>>,int);
@@ -40,8 +44,20 @@ public:
 
 linearSystemSolver::linearSystemSolver(vector<vector<double>> myCoefficientsMatrix, int mySize)
 {
+	importData(myCoefficientsMatrix,mySize);
+
+	return;
+}
+
+linearSystemSolver::~linearSystemSolver(){}
+
+void linearSystemSolver::importData(vector<vector<double>> myCoefficientsMatrix, int mySize)
+{
 	coefficientsMatrix=myCoefficientsMatrix;
 	size=mySize;
+	sparseCoefficientsRow.clear();
+	sparseCoefficientsColumn.clear();
+	sparseCoefficientsValue.clear();
 
 	for(int i=0; i<size; i++)
 	{
@@ -59,8 +75,6 @@ linearSystemSolver::linearSystemSolver(vector<vector<double>> myCoefficientsMatr
 
 	return;
 }
-
-linearSystemSolver::~linearSystemSolver(){}
 
 int linearSystemSolver::coefficientsMatrixLUFactorization()
 {
@@ -162,6 +176,34 @@ int linearSystemSolver::setFieldValue()
 		ierr=VecGetValues(linearSystemSolutionPETSc,1,&i,&value);CHKERRQ(ierr);
 		solution.push_back(value);
 	}
+
+	return ierr;
+}
+
+int linearSystemSolver::reactionForcesCalc()
+{
+	PetscInt n=size;
+	PetscInt nonZeroEntries=sparseCoefficientsValue.size();
+	PetscInt rowNo, colNo;
+	PetscScalar value;
+	
+	ierr=MatCreate(PETSC_COMM_WORLD,&coefficientsMatrixPETSc);CHKERRQ(ierr);
+	ierr=MatSetSizes(coefficientsMatrixPETSc,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr);
+	ierr=MatSetFromOptions(coefficientsMatrixPETSc);CHKERRQ(ierr);
+	ierr=MatSetUp(coefficientsMatrixPETSc);CHKERRQ(ierr);
+	ierr=MatZeroEntries(coefficientsMatrixPETSc);CHKERRQ(ierr);
+
+	for(int i=0; i<nonZeroEntries; i++)
+	{	
+		rowNo=sparseCoefficientsRow[i];
+		colNo=sparseCoefficientsColumn[i];
+		value=sparseCoefficientsValue[i];
+		ierr=MatSetValue(coefficientsMatrixPETSc,rowNo,colNo,value,ADD_VALUES);CHKERRQ(ierr);
+	}
+
+	ierr=MatAssemblyBegin(coefficientsMatrixPETSc,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+	ierr=MatAssemblyEnd(coefficientsMatrixPETSc,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+	// ierr=MatMultAdd()
 
 	return ierr;
 }

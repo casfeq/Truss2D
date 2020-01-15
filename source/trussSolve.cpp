@@ -50,7 +50,15 @@ int main(int argc, char** args)
 	ierr=myLinearSystemSolver.setFieldValue();CHKERRQ(ierr);
 	displacement=myLinearSystemSolver.solution;
 
-	cout << "Solved problem";
+	cout << "Displacement field determined.";
+
+/*		REACTION FORCES DETERMINATION
+ 	----------------------------------------------------------------*/
+
+ 	myStiffnessMatrixAssembly.assemblyStiffnessMatrix();
+	stiffnessMatrix=myStiffnessMatrixAssembly.stiffnessMatrix;
+	myLinearSystemSolver.importData(stiffnessMatrix,stiffnessMatrix.size());
+	ierr=myLinearSystemSolver.reactionForcesCalc();CHKERRQ(ierr);
 	
 	ierr=PetscFinalize();CHKERRQ(ierr);
 
