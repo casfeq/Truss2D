@@ -179,6 +179,10 @@ void stiffnessMatrixAssembly::stiffnessMatrixOverlap(int element)
 
 void stiffnessMatrixAssembly::assemblyStiffnessMatrix()
 {
+	for(int i=0; i<stiffnessMatrix.size(); i++)
+		for(int j=0; j<stiffnessMatrix[i].size(); j++)
+			stiffnessMatrix[i][j]=0;
+		
 	for(int i=0; i<connectivity.size(); i++)
 	{
 		assemblyElementStiffnessMatrix(i);

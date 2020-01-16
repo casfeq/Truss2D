@@ -15,6 +15,7 @@ int main(int argc, char** args)
 	vector<vector<double>> stiffnessMatrix;
 	vector<double> forceVector;
 	vector<double> displacement;
+	vector<double> reactions;
 
 /*		STIFFNESS MATRIX ASSEMBLY
 	----------------------------------------------------------------*/
@@ -50,7 +51,7 @@ int main(int argc, char** args)
 	ierr=myLinearSystemSolver.setFieldValue();CHKERRQ(ierr);
 	displacement=myLinearSystemSolver.solution;
 
-	cout << "Displacement field determined.";
+	cout << "Displacement field determined." << "\n";
 
 /*		REACTION FORCES DETERMINATION
  	----------------------------------------------------------------*/
@@ -58,14 +59,17 @@ int main(int argc, char** args)
  	myStiffnessMatrixAssembly.assemblyStiffnessMatrix();
 	stiffnessMatrix=myStiffnessMatrixAssembly.stiffnessMatrix;
 	myLinearSystemSolver.importData(stiffnessMatrix,stiffnessMatrix.size());
-	ierr=myLinearSystemSolver.reactionForcesCalc();CHKERRQ(ierr);
+	ierr=myLinearSystemSolver.reactionForcesCalc(forceVector);CHKERRQ(ierr);
+	reactions=myLinearSystemSolver.reactions;
+
+	cout << "Reaction forces calculated." << "\n";
 	
 	ierr=PetscFinalize();CHKERRQ(ierr);
 
 /*		EXPORT SOLUTION
 	----------------------------------------------------------------*/
 
-	dataProcessing myDataProcessing(displacement);
+	dataProcessing myDataProcessing(displacement,reactions);
 
 	return ierr;
 };

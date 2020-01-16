@@ -65,6 +65,25 @@ for element in range(0,len(connectivity)):
 	else:
 		plt.plot(xData,yData,'--o',color=colors[0],mec='k',mew=0.5,ms=5)
 
+# Plot reactions
+# reactions=np.loadtxt(fname=str(parentDirectory)+"/export/trussReactions.txt")
+# maxReactionX=0
+# maxReactionY=0
+# maxPositionX=0
+# maxPositionY=0
+# for node in range(0,len(coordinates)):
+# 	maxReactionX=max(abs(maxReactionX),abs(reactions[2*node]))
+# 	maxReactionY=max(abs(maxReactionY),abs(reactions[2*node+1]))
+# 	maxPositionX=max(abs(maxPositionX),abs(coordinates[node][0]))
+# 	maxPositionY=max(abs(maxPositionY),abs(coordinates[node][1]))
+# for node in range(0,len(coordinates)):
+# 	xPosition=coordinates[node][0]
+# 	yPosition=coordinates[node][1]
+# 	reactionX=reactions[2*node]
+# 	reactionY=reactions[2*node+1]
+# 	plt.arrow(xPosition,yPosition,reactionX*maxPositionX/maxReactionX/2,0)
+# 	plt.arrow(xPosition,yPosition,0,reactionY*maxPositionY/maxReactionY/2)
+
 # Set axes' labels
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')

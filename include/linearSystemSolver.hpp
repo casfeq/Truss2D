@@ -22,6 +22,7 @@ public:
 	Vec independentTermsArrayPETSc;
 	Vec linearSystemSolutionPETSc;
 	Vec reactionsPETSc;
+	Vec appliedForcesPETSc;
 	IS perm, iperm;
 	MatFactorInfo info;
 
@@ -33,7 +34,7 @@ public:
 	int setRHSValue(vector<double>);
 	int solveLinearSystem();
 	int setFieldValue();
-	int reactionForcesCalc();
+	int reactionForcesCalc(vector<double>);
 
 	// Constructor
 	linearSystemSolver(vector<vector<double>>,int);
@@ -123,6 +124,8 @@ int linearSystemSolver::createPETScArrays()
 	ierr=VecAssemblyBegin(independentTermsArrayPETSc);CHKERRQ(ierr);
 	ierr=VecAssemblyEnd(independentTermsArrayPETSc);CHKERRQ(ierr);
 	ierr=VecDuplicate(independentTermsArrayPETSc,&linearSystemSolutionPETSc);CHKERRQ(ierr);
+	ierr=VecDuplicate(independentTermsArrayPETSc,&appliedForcesPETSc);CHKERRQ(ierr);
+	ierr=VecDuplicate(independentTermsArrayPETSc,&reactionsPETSc);CHKERRQ(ierr);
 
 	return ierr;
 }
@@ -180,7 +183,7 @@ int linearSystemSolver::setFieldValue()
 	return ierr;
 }
 
-int linearSystemSolver::reactionForcesCalc()
+int linearSystemSolver::reactionForcesCalc(vector<double> independentTermsArray)
 {
 	PetscInt n=size;
 	PetscInt nonZeroEntries=sparseCoefficientsValue.size();
@@ -200,10 +203,27 @@ int linearSystemSolver::reactionForcesCalc()
 		value=sparseCoefficientsValue[i];
 		ierr=MatSetValue(coefficientsMatrixPETSc,rowNo,colNo,value,ADD_VALUES);CHKERRQ(ierr);
 	}
-
 	ierr=MatAssemblyBegin(coefficientsMatrixPETSc,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	ierr=MatAssemblyEnd(coefficientsMatrixPETSc,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-	// ierr=MatMultAdd()
+
+	for(int i=0; i<n; i++)
+	{
+		value=-independentTermsArray[i];
+		ierr=VecSetValue(appliedForcesPETSc,i,value,ADD_VALUES);CHKERRQ(ierr);
+	}
+
+	ierr=VecAssemblyBegin(appliedForcesPETSc);CHKERRQ(ierr);
+	ierr=VecAssemblyEnd(appliedForcesPETSc);CHKERRQ(ierr);
+
+	ierr=MatMultAdd(coefficientsMatrixPETSc,linearSystemSolutionPETSc,appliedForcesPETSc,
+		reactionsPETSc);
+
+	reactions.clear();
+	for(int i=0; i<n; i++)
+	{
+		ierr=VecGetValues(reactionsPETSc,1,&i,&value);CHKERRQ(ierr);
+		reactions.push_back(value);
+	}
 
 	return ierr;
 }

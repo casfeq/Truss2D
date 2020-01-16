@@ -10,25 +10,25 @@ class dataProcessing
 {
 public:
 	// Class functions
-	void exportDisplacementToTxt(vector<double>);
+	void exportSolutionsToTxt(vector<double>,vector<double>);
 
 	// Constructor
-	dataProcessing(vector<double> my1DField);
+	dataProcessing(vector<double>,vector<double>);
 
 	// Destructor
 	~dataProcessing();
 };
 
-dataProcessing::dataProcessing(vector<double> my1DField)
+dataProcessing::dataProcessing(vector<double> solution, vector<double> reactions)
 {
-	exportDisplacementToTxt(my1DField);
+	exportSolutionsToTxt(solution,reactions);
 }
 
 dataProcessing::~dataProcessing(){}
 
-void dataProcessing::exportDisplacementToTxt(vector<double> my1DField)
+void dataProcessing::exportSolutionsToTxt(vector<double> solution, vector<double> reactions)
 {
-	int rowNo=my1DField.size();
+	int rowNo=solution.size();
 	string fileName="../export/trussSolution.txt";
 
 	ofstream myFile(fileName);
@@ -36,11 +36,25 @@ void dataProcessing::exportDisplacementToTxt(vector<double> my1DField)
 	{
 		for(int i=0; i<rowNo; i++)
 		{
-			myFile << my1DField[i];
+			myFile << solution[i];
 			myFile << "\n";
 		}
 
 		myFile.close();
+	}
+
+	fileName="../export/trussReactions.txt";
+
+	ofstream myFile2(fileName);
+	if(myFile2.is_open())
+	{
+		for(int i=0; i<rowNo; i++)
+		{
+			myFile2 << reactions[i];
+			myFile2 << "\n";
+		}
+
+		myFile2.close();
 	}
 
 	return;
