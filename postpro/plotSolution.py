@@ -24,9 +24,11 @@ colors.append("#02c14d")
 
 # Create and define figure's size and margins
 fig=plt.figure()
+fig.clf()
+fig.add_subplot(1,1,1)
 
 # Define figure's name
-plotName="plot/trussSolution.png"
+plotName="plot/trussDeformed.png"
 
 # Plot initial position
 connectivity=np.loadtxt(fname=str(parentDirectory)+"/input/connectivity.txt")
@@ -65,25 +67,6 @@ for element in range(0,len(connectivity)):
 	else:
 		plt.plot(xData,yData,'--o',color=colors[0],mec='k',mew=0.5,ms=5)
 
-# Plot reactions
-# reactions=np.loadtxt(fname=str(parentDirectory)+"/export/trussReactions.txt")
-# maxReactionX=0
-# maxReactionY=0
-# maxPositionX=0
-# maxPositionY=0
-# for node in range(0,len(coordinates)):
-# 	maxReactionX=max(abs(maxReactionX),abs(reactions[2*node]))
-# 	maxReactionY=max(abs(maxReactionY),abs(reactions[2*node+1]))
-# 	maxPositionX=max(abs(maxPositionX),abs(coordinates[node][0]))
-# 	maxPositionY=max(abs(maxPositionY),abs(coordinates[node][1]))
-# for node in range(0,len(coordinates)):
-# 	xPosition=coordinates[node][0]
-# 	yPosition=coordinates[node][1]
-# 	reactionX=reactions[2*node]
-# 	reactionY=reactions[2*node+1]
-# 	plt.arrow(xPosition,yPosition,reactionX*maxPositionX/maxReactionX/2,0)
-# 	plt.arrow(xPosition,yPosition,0,reactionY*maxPositionY/maxReactionY/2)
-
 # Set axes' labels
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')
@@ -96,4 +79,69 @@ fig.legend(loc='upper center',ncol=2)
 # Save figure
 plt.savefig(plotName)
 
-print("Plotted results")
+print("Plotted deformed position.")
+
+# Create and define figure's size and margins
+fig=plt.figure()
+fig.clf()
+fig.add_subplot(1,1,1)
+
+# Define figure's name
+plotName="plot/trussForces.png"
+
+# Plot initial position
+connectivity=np.loadtxt(fname=str(parentDirectory)+"/input/connectivity.txt")
+coordinates=np.loadtxt(fname=str(parentDirectory)+"/input/coordinates.txt")
+for element in range(0,len(connectivity)):
+	xData=[]
+	yData=[]
+	node1=int(connectivity[element][0])-1
+	node2=int(connectivity[element][1])-1
+	xData.append(coordinates[node1][0])
+	xData.append(coordinates[node2][0])
+	yData.append(coordinates[node1][1])
+	yData.append(coordinates[node2][1])
+	plt.plot(xData,yData,'-o',color=colors[3],ms=5,mec='k',mew=0.5)
+
+# Plot reactions
+reactions=np.loadtxt(fname=str(parentDirectory)+"/export/trussReactions.txt")
+maxReactionX=0
+maxReactionY=0
+maxPositionX=0
+maxPositionY=0
+for node in range(0,len(coordinates)):
+	if abs(reactions[2*node])<1e-11:
+		reactions[2*node]=0
+	if abs(reactions[2*node+1])<1e-11:
+		reactions[2*node+1]=0
+for node in range(0,len(coordinates)):
+	maxReactionX=max(abs(maxReactionX),abs(reactions[2*node]))
+	maxReactionY=max(abs(maxReactionY),abs(reactions[2*node+1]))
+	maxPositionX=max(abs(maxPositionX),abs(coordinates[node][0]))
+	maxPositionY=max(abs(maxPositionY),abs(coordinates[node][1]))
+for node in range(0,len(coordinates)):
+	xPosition=coordinates[node][0]
+	yPosition=coordinates[node][1]
+	reactionX=reactions[2*node]
+	reactionY=reactions[2*node+1]
+	if maxReactionX!=0 and reactionX!=0:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition+reactionX*maxPositionX \
+			/maxReactionX/2,yPosition),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
+		plt.gca().annotate(str(reactionX)+" N",xy=(xPosition,yPosition),xytext=(xPosition, \
+			yPosition+reactionY*maxPositionY/maxReactionY/2))
+	if maxReactionY!=0 and reactionY!=0:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition,yPosition+reactionY* \
+			maxPositionY/maxReactionY/2),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
+		plt.gca().annotate(str(reactionY)+" N",xy=(xPosition,yPosition),xytext=(xPosition, \
+			yPosition+reactionY*maxPositionY/maxReactionY/2))
+
+# Set axes' labels
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
+plt.gca().set_aspect('equal', adjustable='box')
+plt.grid(which='major',axis='both')
+
+# Save figure
+plt.savefig(plotName)
+
+print("Plotted reaction forces.")
