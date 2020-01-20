@@ -92,6 +92,8 @@ plotName="plot/trussForces.png"
 # Plot initial position
 connectivity=np.loadtxt(fname=str(parentDirectory)+"/input/connectivity.txt")
 coordinates=np.loadtxt(fname=str(parentDirectory)+"/input/coordinates.txt")
+maxPositionX=0
+maxPositionY=0
 for element in range(0,len(connectivity)):
 	xData=[]
 	yData=[]
@@ -101,59 +103,57 @@ for element in range(0,len(connectivity)):
 	xData.append(coordinates[node2][0])
 	yData.append(coordinates[node1][1])
 	yData.append(coordinates[node2][1])
+	maxPositionX=max(abs(maxPositionX),abs(coordinates[node1][0]))
+	maxPositionY=max(abs(maxPositionY),abs(coordinates[node1][1]))
+	maxPositionX=max(abs(maxPositionX),abs(coordinates[node2][0]))
+	maxPositionY=max(abs(maxPositionY),abs(coordinates[node2][1]))
 	if element==0:
 		plt.plot(xData,yData,'-',color=colors[0],label='Reaction forces')
 		plt.plot(xData,yData,'-',color=colors[2],label='Applied forces')
 	plt.plot(xData,yData,'-o',color=colors[3],ms=5,mec='k',mew=0.5)
+vecsize=min(maxPositionX,maxPositionY)/2
+
+# Plot applied forces
+applied=np.loadtxt(fname=str(parentDirectory)+"/input/neumannBC.txt")
+maxForce=0
+for node in range(0,len(applied)):
+	xPosition=coordinates[int(applied[node][0])-1][0]
+	yPosition=coordinates[int(applied[node][0])-1][1]
+	force=applied[node][2]
+	maxForce=max(maxForce,abs(force))
+	if force!=0 and applied[node][1]==1:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition+vecsize*force/ \
+			abs(force),yPosition),arrowprops=dict(arrowstyle='<-',color=colors[2],lw=2))
+		plt.gca().annotate(str(format(abs(reactionX),'.1e'))+" N",xy=(xPosition,yPosition), \
+			xytext=(xPosition+vecsize*force/abs(force),yPosition))
+	if force!=0 and applied[node][1]==2:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition,yPosition+vecsize* \
+			force/abs(force)),arrowprops=dict(arrowstyle='<-',color=colors[2],lw=2))
+		plt.gca().annotate(str(format(abs(force),'.1e'))+" N",xy=(xPosition,yPosition), \
+			xytext=(xPosition,yPosition+vecsize*force/abs(force)))
 
 # Plot reaction forces
 reactions=np.loadtxt(fname=str(parentDirectory)+"/export/trussReactions.txt")
-maxReactionX=0
-maxReactionY=0
-maxPositionX=0
-maxPositionY=0
 for node in range(0,len(coordinates)):
-	if abs(reactions[2*node])<1e-11:
+	if abs(reactions[2*node])<1e-6*maxForce:
 		reactions[2*node]=0
-	if abs(reactions[2*node+1])<1e-11:
+	if abs(reactions[2*node+1])<1e-6*maxForce:
 		reactions[2*node+1]=0
-for node in range(0,len(coordinates)):
-	maxReactionX=max(abs(maxReactionX),abs(reactions[2*node]))
-	maxReactionY=max(abs(maxReactionY),abs(reactions[2*node+1]))
-	maxPositionX=max(abs(maxPositionX),abs(coordinates[node][0]))
-	maxPositionY=max(abs(maxPositionY),abs(coordinates[node][1]))
 for node in range(0,len(coordinates)):
 	xPosition=coordinates[node][0]
 	yPosition=coordinates[node][1]
 	reactionX=reactions[2*node]
 	reactionY=reactions[2*node+1]
-	if maxReactionX!=0 and reactionX!=0:
-		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition+reactionX*maxPositionX \
-			/maxReactionX/2,yPosition),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
-		plt.gca().annotate(str(reactionX)+" N",xy=(xPosition,yPosition),xytext=(xPosition+ \
-			reactionX*maxPositionX/maxReactionX/2,yPosition))
-	if maxReactionY!=0 and reactionY!=0:
-		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition,yPosition+reactionY* \
-			maxPositionY/maxReactionY/2),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
-		plt.gca().annotate(str(reactionY)+" N",xy=(xPosition,yPosition),xytext=(xPosition, \
-			yPosition+reactionY*maxPositionY/maxReactionY/2))
-
-# Plot applied forces
-applied=np.loadtxt(fname=str(parentDirectory)+"/input/neumannBC.txt")
-for node in range(0,len(applied)):
-	xPosition=coordinates[int(applied[node][0])-1][0]
-	yPosition=coordinates[int(applied[node][0])-1][1]
-	force=applied[node][2]
-	if maxReactionX!=0 and force!=0 and applied[node][1]==1:
-		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition+force*maxPositionX \
-			/maxReactionX/2,yPosition),arrowprops=dict(arrowstyle='<-',color=colors[2],lw=2))
-		plt.gca().annotate(str(force)+" N",xy=(xPosition,yPosition),xytext=(xPosition+force* \
-			maxPositionX/maxReactionX/2,yPosition))
-	if maxReactionY!=0 and force!=0 and applied[node][1]==2:
-		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition,yPosition+force* \
-			maxPositionY/maxReactionY/2),arrowprops=dict(arrowstyle='<-',color=colors[2],lw=2))
-		plt.gca().annotate(str(abs(force))+" N",xy=(xPosition,yPosition),xytext=(xPosition, \
-			yPosition+force*maxPositionY/maxReactionY/2))
+	if reactionX!=0:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition+vecsize*reactionX/ \
+			abs(reactionX),yPosition),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
+		plt.gca().annotate(str(format(abs(reactionX),'.1e'))+" N",xy=(xPosition,yPosition), \
+			xytext=(xPosition+vecsize*reactionX/abs(reactionX),yPosition))
+	if reactionY!=0:
+		plt.gca().annotate('',xy=(xPosition,yPosition),xytext=(xPosition,yPosition+vecsize* \
+			reactionY/abs(reactionY)),arrowprops=dict(arrowstyle='<-',color=colors[0],lw=2))
+		plt.gca().annotate(str(format(abs(reactionX),'.1e'))+" N",xy=(xPosition,yPosition), \
+			xytext=(xPosition,yPosition+vecsize*reactionY/abs(reactionY)))
 
 # Set axes' labels
 plt.xlabel('x (m)')
