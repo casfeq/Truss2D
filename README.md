@@ -1,4 +1,4 @@
-# TrussFELib
+# Truss2D
 
 This program implements a Finite Element Method for discretization and solution of two-dimensional truss problems. The governing equations are discretized within the FEM and the resulting linear system of equations is solved with a LU Factorization found in PETSc suite [1].
 
