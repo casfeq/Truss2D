@@ -25,4 +25,3 @@ echo ""
 echo "-- Plotting results"
 python3 -W ignore ./postpro/plotSolution.py
 echo ""
-rm -rf export/*
