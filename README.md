@@ -79,7 +79,7 @@ v_displacement_2 # Displacement (in meters) in y-direction for node 2
 The nodes position is plotted in initial configuration and deformed configuration. This results are found in the trussDeformed.png file.
 
 <p float="left">
-	<img src="plot/trussDeformed.png" alt="deformed" height=300/>
+	<img src="plot/trussDeformed.png" alt="deformed" height=600/>
 </p>
 
 ### Reaction Forces
@@ -96,5 +96,5 @@ reaction_in_y_2 # Reaction force (in N) in y-direction for node 2
 The applied and reaction forces in the truss are depicted in the trussForces.png file.
 
 <p float="left">
-	<img src="plot/trussForces.png" alt="forces" height=300/>
+	<img src="plot/trussForces.png" alt="forces" height=600/>
 </p>
